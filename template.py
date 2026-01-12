@@ -8,38 +8,29 @@ logging.basicConfig(level=logging.INFO, format='[%(asctime)s]: %(message)s')
 project_name = "app"
 
 list_of_files = [
-    # app
-    "app/database.py",
-    "app/db_models.py",
-    "app/schemas.py",
-    "app/routers.py",
-    "app/utils.py",
-    "app/main.py",
-    # model
-    "model/ReadMe.md",
-    "model/artifacts/.gitkeep",
-    "model/script/train_model.py",
-    #notebooks
-    "notebooks/Exploration.ipynb",
-    "scripts/train_model.py",
-    # UI
-    "ui/streamlit_app.py",
-    # data
-    "data/README.md",
-    "data/raw/.gitkeep",
-    "data/processed/.gitkeep",
-    # tests
-    "tests/test_api.py",
-    # docker
-    ".dockerignore",
-    "Dockerfile",
+    "app.py", # # Main Streamlit app + FastAPI server
+    "requirements.txt", # Project dependencies
+    ".env.example", # Example environment variables template
+    ".evn", # Environment variables
+    "README.md", # Project documentation
+    "LICENSE", # License file
+    ".gitignore", # Git ignore file
+    f"src/{project_name}/__init__.py",
+    f"src/{project_name}/document_processor.py", # document loading and processing
+    f"src/{project_name}/vector_store.py", # vector store management
+    f"src/{project_name}/retriever.py", # retrieval logic
+    f"src/{project_name}/chat_engine.py", # LLM integration and chat logic
+    f"src/{project_name}/config.py", # configuration settings
+    f"src/{project_name}/api.py", # FastAPI endpoints
+    f"src/{project_name}/utils.py", # utility functions
+    "data/.gitkeep",
+    "notebooks/rag_experimentation.ipynb", # Jupyter notebook for experimentation
+    "tests/", # Test directory
+    "docs/", # Documentation directory
+    "chroma_db/" # Vector store database
+    "dockerfile", 
     "docker-compose.yml",
-    # env & config
-    ".env.example",
-    ".env",
-    ".gitignore",
-    "requirements.txt",
-    "README.md"
+    ".dockerignore",
 ]
 
 

@@ -11,7 +11,7 @@ list_of_files = [
     "app.py", # # Main Streamlit app + FastAPI server
     "requirements.txt", # Project dependencies
     ".env.example", # Example environment variables template
-    ".evn", # Environment variables
+    ".env", # Environment variables
     "README.md", # Project documentation
     "LICENSE", # License file
     ".gitignore", # Git ignore file
@@ -25,9 +25,10 @@ list_of_files = [
     f"src/{project_name}/utils.py", # utility functions
     "data/.gitkeep",
     "notebooks/rag_experimentation.ipynb", # Jupyter notebook for experimentation
-    "tests/", # Test directory
-    "docs/", # Documentation directory
-    "chroma_db/" # Vector store database
+    "tests/test_api.py",
+    "tests/text_LLM.py", # Test directory
+    "docs/image.png", # Documentation directory
+    "chroma_db/note.txt", # Vector store database
     "dockerfile", 
     "docker-compose.yml",
     ".dockerignore",

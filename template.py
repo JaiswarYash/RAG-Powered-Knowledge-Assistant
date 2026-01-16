@@ -15,18 +15,12 @@ list_of_files = [
     "README.md", # Project documentation
     "LICENSE", # License file
     ".gitignore", # Git ignore file
-    f"src/{project_name}/__init__.py",
-    f"src/{project_name}/document_processor.py", # document loading and processing
-    f"src/{project_name}/vector_store.py", # vector store management
-    f"src/{project_name}/retriever.py", # retrieval logic
-    f"src/{project_name}/chat_engine.py", # LLM integration and chat logic
-    f"src/{project_name}/config.py", # configuration settings
-    f"src/{project_name}/api.py", # FastAPI endpoints
-    f"src/{project_name}/utils.py", # utility functions
+    f"core/__init__.py",
+    f"core/document_loder.py", # document loading and processing
+    f"core/Rag_logic.py"
+    f"core/config.py", # configuration settings
     "data/.gitkeep",
     "notebooks/rag_experimentation.ipynb", # Jupyter notebook for experimentation
-    "tests/test_api.py",
-    "tests/text_LLM.py", # Test directory
     "docs/image.png", # Documentation directory
     "chroma_db/note.txt", # Vector store database
     "dockerfile", 

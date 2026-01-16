@@ -2,8 +2,13 @@ import logging
 import os
 from PyPDF2 import PdfReader
 from langchain.text_splitter import RecursiveCharacterTextSplitter
+from langchain.embeddings import HuggingFaceInferenceAPIEmbeddings
+import sentence_transformers
 from typing import List
+from dotenv import load_dotenv
 import docx2txt
+
+load_dotenv()
 
 # Configure logging
 logging.basicConfig(
@@ -15,7 +20,13 @@ logging.basicConfig(
 class DocumentProcessor:
 
     # define init method for chunking configuration
-    def __init__(self, chunk_size: int = 1000, chunk_overlap: int = 200):
+    def __init__(
+        self, 
+        chunk_size: int = 1000, 
+        chunk_overlap: int = 200,
+        api_key: str = None
+    ):
+        # Chunking configuration
         self.chunk_size = chunk_size
         self.chunk_overlap = chunk_overlap
         self.text_splitter = RecursiveCharacterTextSplitter(
@@ -24,8 +35,11 @@ class DocumentProcessor:
             chunk_overlap=self.chunk_overlap,
             length_function=len
         )
-        self.logger = logging.getLogger(__name__)
-        self.supported_formats = {'.pdf', '.docx', '.doc', '.txt'}
+        self.api_key = api_key or os.getenv('HUGGINGFACE_API_KEY')
+        self.embeddings = HuggingFaceInferenceAPIEmbeddings(
+            api_key=self.api_key,
+            model_name="sentence-transformers/all-MiniLM-L6-v2"
+        )
 
     # method to load and process .PDF and .doc files
     def load_document_file(self, file_path: str) -> str:
@@ -130,3 +144,25 @@ class DocumentProcessor:
             })
         self.logger.info(f"Created {len(chunks_doc)} chunks from document")
         return chunks_doc
+    
+    # embedding
+    def create_embedding(self, chunks_doc: List[dict]) -> List[dict]:
+        
+        if not chunks_doc:
+            self.logger.warning(f'No chunks provided for embedding')
+            return []
+        
+        try:
+            text = [chunk['content'] for chunk in chunks_doc]
+
+            embeddings = self.embeddings.embed_documents(text)
+
+            for chunk, embedding in zip(embeddings):
+                chunk['embedding'] = embedding
+            
+            self.logger.info(f"Successfully created {len(embeddings)} embeddings")
+            return chunks_doc
+        except Exception as e:
+            self.logger.error(f'Error creating Embedding:{e}')
+            return []
+        

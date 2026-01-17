@@ -17,7 +17,7 @@ list_of_files = [
     ".gitignore", # Git ignore file
     f"core/__init__.py",
     f"core/document_loder.py", # document loading and processing
-    f"core/Rag_logic.py"
+    f"core/Rag_logic.py",
     f"core/config.py", # configuration settings
     "data/.gitkeep",
     "notebooks/rag_experimentation.ipynb", # Jupyter notebook for experimentation

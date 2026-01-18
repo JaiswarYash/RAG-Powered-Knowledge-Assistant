@@ -64,6 +64,21 @@ def document_loader(file_path:str) -> List[Document]:
         logger.error(f"Error loading document {filename}: {e}")
         return []
 
+# creating function for batch processing
+
+def multiple_document_loader(file_paths:List[str]) -> List[Document]:
+
+    document_list = []
+
+    logger.info(f"Loading {len(file_paths)} file(s)...")
+ 
+    for file_path in file_paths:
+        docs = document_loader(file_path)
+        document_list.extend(docs)
+          
+    logger.info(f"Total documents loaded: {len(document_list)}")  
+    return document_list
+    
 '''
 if __name__ == "__main__":
     sample_file = "data/sample.pdf"  # Replace with your sample file path

@@ -1,7 +1,7 @@
 import os
 from typing import List
 from pathlib import Path
-from langchain.schema import Document
+from langchain_core.documents import Document
 from langchain_community.document_loaders import (
     PyMuPDFLoader as PDFLoader,
     Docx2txtLoader,
@@ -65,7 +65,6 @@ def document_loader(file_path:str) -> List[Document]:
         return []
 
 # creating function for batch processing
-
 def multiple_document_loader(file_paths:List[str]) -> List[Document]:
 
     document_list = []

@@ -1,10 +1,11 @@
 import os
 from typing import List
 from pathlib import Path
-from document_loader import document_loader, multiple_document_loader
+from document_loader import document_loader, multiple_documents_loader, load_from_directory
 from langchain_text_splitters import RecursiveCharacterTextSplitter   
 from langchain_community.embeddings import HuggingFaceEmbeddings
 from langchain_core.documents import Document
+from config import EMBEDDING_MODEL
 import logging
 
 logging.basicConfig(
@@ -14,7 +15,7 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 class RagLogic:
-    def __init__(self, model_name: str = "sentence-transformers/all-MiniLM-L6-v2", chunk_size: int = 1000, chunk_overlap: int = 200,):
+    def __init__(self, model_name: str = EMBEDDING_MODEL, chunk_size: int = 1000, chunk_overlap: int = 200,):
         # Initialize text splitter and embeddings
         self.text_splitter = RecursiveCharacterTextSplitter(
             chunk_size=chunk_size,
@@ -27,6 +28,14 @@ class RagLogic:
             encode_kwargs={"normalize_embeddings": True})
         logger.info(f"✓ RagLogic initialized with model: {model_name}")
         logger.info(f"  Chunk size: {chunk_size}, Overlap: {chunk_overlap}")
+
+        # Validate inputs
+        if chunk_size <= 0:
+            raise ValueError("chunk_size must be positive")
+        if chunk_overlap < 0:
+            raise ValueError("chunk_overlap cannot be negative")
+        if chunk_overlap >= chunk_size:
+            raise ValueError("chunk_overlap must be less than chunk_size")
     
     # step 1: load documents using document loader
     # step 2: split documents into fixed size chunks
@@ -48,7 +57,7 @@ class RagLogic:
                 chunk_counter[source] = 0
             chunk.metadata["chunk_id"] = chunk_counter[source] 
             chunk_counter[source] += 1
-
+        logger.info(f"✓ Split {len(documents)} document(s) into {len(chunks)} chunk(s)")
         return chunks
     
     # load and split documents
@@ -64,13 +73,29 @@ class RagLogic:
 
     def process_files(self, file_paths: List[str]) -> List[Document]:
         """Process multiple files into chunks."""
-        documents = multiple_document_loader(file_paths)
+        documents = multiple_documents_loader(file_paths)
         
         if not documents:
             logger.warning("No documents loaded from provided files")
             return []
         
         return self.split_documents(documents)
+    
+    # batch process files from directory
+    def process_directory(self, directory_path: str, glob_pattern: str = "**/*", mode: str = "single") -> List[Document]:
+
+        documents = load_from_directory(
+            directory_path, 
+            glob_pattern=glob_pattern,
+            mode=mode
+        )
+        
+        if not documents:
+            logger.warning(f"No documents loaded from directory {directory_path}")
+            return []
+        
+        return self.split_documents(documents)
+    
 
     def get_embedding_model(self):  # ← singular (recommended)
         return self.embeddings

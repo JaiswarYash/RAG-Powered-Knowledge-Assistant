@@ -1,10 +1,11 @@
 import os
-from typing import List, Optional, Dict
-from langchain_community.vectorstores import Chroma
-from Rag_logic import RagLogic 
-from langchain_core.documents import Document
-import logging
 import json
+import logging
+from Rag_logic import RagLogic 
+from config import PERSIST_DIRECTORY
+from langchain_community.vectorstores import Chroma
+from langchain_core.documents import Document
+from typing import List, Optional, Dict
 
 logger = logging.getLogger(__name__)
 
@@ -19,7 +20,7 @@ logger = logging.getLogger(__name__)
 class VectorDB:
 
     # Initialize VectorDB with RagLogic instance
-    def __init__(self, rag_logic, persist_directory: str = "./chroma_db"):
+    def __init__(self, rag_logic, persist_directory: str = PERSIST_DIRECTORY):
         self.rag_logic = rag_logic
         self.persist_directory = persist_directory
         self.vector_store = None
@@ -45,7 +46,7 @@ class VectorDB:
                 logger.error(f"Could not load indexed files: {e}")
         return set()
 
-    def _save_indexed(self)-> None:
+    def _save_indexed_file(self)-> None:
         try:
             with open(self.indexed_files_path, "w") as f:
                 json.dump(list(self.indexed_files), f, indent = 2)
@@ -81,27 +82,26 @@ class VectorDB:
                     self.indexed_files.add(file_source)
 
             # Save indexed files list
-            self._save_indexed_files() 
+            self._save_indexed_file() 
             
             logger.info(f"✓ Added {len(chunks)} chunks")
             logger.info(f"  Total indexed files: {len(self.indexed_files)}")
+            return True
 
         except Exception as e:
             logger.error(f"✗ Error adding documents: {e}")
+            return False
     
-    def semantic_search(self, query: str, top_k: int = 3, filter: Optional[Dict] = None) -> List[Document]:
+    # Perform semantic search
+    def search(self, query: str, top_k: int = 2,filter: Optional[Dict] = None) -> List[Document]:
         """Perform semantic search on the vector store."""
         if not self.vector_store:
-            logger.error("✗ Vector store is not initialized.")
+            logger.error("initialized vector store")
             return []
-        
         try:
-            results = self.vector_store.similarity_search(
-                    query, k=top_k, filter=filter
-                )
-            logger.info(f"✓ Found {len(results)} results for query")
+            results = self.vector_store.similarity_search(query, k=top_k, filter=filter)
+            logger.info(f"✓ Search completed: {len(results)} results for query '{query}'")
             return results
-                    
         except Exception as e:
             logger.error(f"✗ Error during search: {e}")
             return []
@@ -153,9 +153,7 @@ class VectorDB:
         logger.info(f"Processing {len(new_files)} new files...")
         chunks = self.rag_logic.process_files(new_files)
         self.add_documents(chunks)
-
-# Example usage
-
+'''
 # Example usage
 if __name__ == "__main__":
     logging.basicConfig(
@@ -185,7 +183,7 @@ if __name__ == "__main__":
         
         # Test search
         logger.info("\nTesting search:")
-        results = vector_db.semantic_search("main topic", top_k=2)
+        results = vector_db.search("what is AI", top_k=2)
         
         for i, doc in enumerate(results, 1):
             logger.info(f"\n--- Result {i} ---")
@@ -193,3 +191,4 @@ if __name__ == "__main__":
             logger.info(f"Content: {doc.page_content[:150]}...")
     else:
         logger.error(f"File not found: {test_file}")
+'''

@@ -53,7 +53,7 @@ def multiple_documents_loader(file_paths:str, mode: str = "single")-> List[Docum
     return all_documents
 
 # for batch processing of files in a directory
-def load_from_directory(directory_path: str, glob_pattern: str = "**/*") -> List[Document]:
+def load_from_directory(directory_path: str, glob_pattern: str = "**/*.{pdf,docx,doc,txt}") -> List[Document]:
     try:
         loader = DirectoryLoader(
             path=directory_path,

@@ -1,7 +1,7 @@
 import os
 import json
 import logging
-from Rag_logic import RagLogic 
+from Rag_logic import RagLogic
 from config import PERSIST_DIRECTORY
 from langchain_community.vectorstores import Chroma
 from langchain_core.documents import Document
@@ -20,8 +20,8 @@ logger = logging.getLogger(__name__)
 class VectorDB:
 
     # Initialize VectorDB with RagLogic instance
-    def __init__(self, rag_logic, persist_directory: str = PERSIST_DIRECTORY):
-        self.rag_logic = rag_logic
+    def __init__(self, RagLogic, persist_directory: str = PERSIST_DIRECTORY):
+        self.rag_logic = RagLogic
         self.persist_directory = persist_directory
         self.vector_store = None
         self.indexed_files_path = os.path.join(persist_directory, "indexed_files.json")
@@ -37,6 +37,7 @@ class VectorDB:
     
     def _load_indexed_files(self) -> set:
         if os.path.exists(self.indexed_files_path):
+            '''Load the list of indexed file from disk'''
             try:
                 with open(self.indexed_files_path, "r") as f:
                     files = json.load(f)
@@ -47,6 +48,7 @@ class VectorDB:
         return set()
 
     def _save_indexed_file(self)-> None:
+        '''Save list of indexed_file from disk'''
         try:
             with open(self.indexed_files_path, "w") as f:
                 json.dump(list(self.indexed_files), f, indent = 2)
@@ -65,50 +67,47 @@ class VectorDB:
         return self.vector_store
     
     # Add document chunks to vector store
-    def add_documents(self, chunks: List[Document]) -> None:
+    def add_documents(self, chunks: List[Document]) -> bool:
         """Add document chunks to vector store."""
         if not chunks:
-            logger.warning("No chunks to add")
-            return
-        
+            logger.warning('NO chunnks to add')
+            return False
         try:
-            # Add to vector store
+            # add it to store
             self.vector_store.add_documents(chunks)
 
-            # Track indexed files
             for chunk in chunks:
-                file_source = chunk.metadata.get("source")
+                file_source = chunk.metadata.get('source')
                 if file_source:
-                    self.indexed_files.add(file_source)
+                    abs_source = os.path.abspath(file_source)
+                    self.indexed_files(abs_source)
+            self._save_indexed_file()
 
-            # Save indexed files list
-            self._save_indexed_file() 
-            
             logger.info(f"✓ Added {len(chunks)} chunks")
             logger.info(f"  Total indexed files: {len(self.indexed_files)}")
             return True
-
         except Exception as e:
             logger.error(f"✗ Error adding documents: {e}")
             return False
-    
+
     # Perform semantic search
-    def search(self, query: str, top_k: int = 2,filter: Optional[Dict] = None) -> List[Document]:
+    def search(self, query: str, top_k: int = 3,filter: Optional[Dict] = None) -> List[Document]:
         """Perform semantic search on the vector store."""
         if not self.vector_store:
-            logger.error("initialized vector store")
+            logger.error("Vector store not initialized")
             return []
         try:
-            results = self.vector_store.similarity_search(query, k=top_k, filter=filter)
-            logger.info(f"✓ Search completed: {len(results)} results for query '{query}'")
+            results = self.vector_store.similarity_search(query, k=top_k, filter = filter)
+            logger.info(f"✓ Found {len(results)} results for '{query}'")
             return results
         except Exception as e:
             logger.error(f"✗ Error during search: {e}")
             return []
-    
+        
     def is_file_indexed(self, source: str) -> bool:
         """Check if a file has already been indexed."""
-        return source in self.indexed_files
+        abs_source = os.path.abspath(source)
+        return abs_source in self.indexed_files
     
     def get_indexed_files(self) -> List[str]:
         """Get a list of all indexed files."""
@@ -116,44 +115,70 @@ class VectorDB:
     
     def get_stats(self) -> Dict:
         """Get statistics about the vector store."""
+        total_chunks = 0
+        try:
+            if self.vector_store and self.vector_store._collection:
+                total_chunks = self.vector_store._collection.count
+        except Exception as e:
+            logger.error('Could not get chunk count: {e}')
         return {
             "total_files": len(self.indexed_files),
+            "total_chunks": total_chunks,
             "indexed_files": self.get_indexed_files(),
             "persist_directory": self.persist_directory
         }
     
     # load process_file from RagLogic and add to vector store
     
-    def process_and_add_file(self, file_path: str) -> None:
+    def process_and_add_file(self, file_path: str) -> bool:
         """Process a single file and add to vector store."""
         # Process file to get chunks
-        chunks = self.rag_logic.process_file(file_path)
+        file_path = os.path.abspath(file_path)
+
+        if self.is_file_indexed(file_path):
+            logger.warning(f"Already indexed: {os.path.basename(file_path)}")
+            return False
         
+        chunks = self.rag_logic.process_file(file_path)
+
         if not chunks:
             logger.warning(f"No chunks from {file_path}")
-            return
+            return False
         
-        # Check if already indexed (using metadata from chunk)
-        file_source = chunks[0].metadata.get("source")
-        if file_source and self.is_file_indexed(file_source):
-            logger.info(f"Already indexed: {os.path.basename(file_source)}")
-            return
-        
-        # Add to database
-        self.add_documents(chunks)
+        return self.add_documents(chunks)
     
-    def process_and_add_files(self, file_paths: List[str]) -> None:
+    def process_and_add_files(self, file_paths: List[str]) -> bool:
         """Process multiple files and add to vector store."""
+        file_paths = [os.path.abspath(fp) for fp in file_paths]
         new_files = [fp for fp in file_paths if not self.is_file_indexed(fp)]
         
         if not new_files:
             logger.info("All files already indexed")
-            return
+            return True
         
-        logger.info(f"Processing {len(new_files)} new files...")
+        logger.info(f"Processing {len(new_files)} new file(s)...")
         chunks = self.rag_logic.process_files(new_files)
+        return self.add_documents(chunks)
+    
+    def process_and_add_directory(self, directory_path: str, glob_pattern: str = "**/*.{pdf,docx,doc,txt}") -> None:
+
+        documents = self.rag_logic.load_from_directory(directory_path, glob_pattern=glob_pattern)
+
+        if not documents:
+            logger.warning(f"No documents loaded from directory {directory_path}")
+            return []
+        
+        # Filter out already indexed files
+        new_documents = [doc for doc in documents if not self.is_file_indexed(doc.metadata.get("source", ""))]
+
+        if not new_documents:
+            logger.info("All files in directory already indexed")
+            return []
+        logger.info(f"Processing {len(new_documents)} new documents from directory...")
+
+        chunks = self.rag_logic.split_documents(new_documents)
         self.add_documents(chunks)
-'''
+
 # Example usage
 if __name__ == "__main__":
     logging.basicConfig(
@@ -161,6 +186,7 @@ if __name__ == "__main__":
         format='%(asctime)s - %(levelname)s - %(message)s'
     )
     
+
     from Rag_logic import RagLogic  # ← Import here, not at top
     
     # Initialize
@@ -191,4 +217,3 @@ if __name__ == "__main__":
             logger.info(f"Content: {doc.page_content[:150]}...")
     else:
         logger.error(f"File not found: {test_file}")
-'''

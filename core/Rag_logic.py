@@ -15,7 +15,16 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 class RagLogic:
-    def __init__(self, model_name: str = EMBEDDING_MODEL, chunk_size: int = 1000, chunk_overlap: int = 200,):
+    def __init__(self, model_name: str = EMBEDDING_MODEL, chunk_size: int = 1000, chunk_overlap: int = 200):
+
+        # Validate inputs
+        if chunk_size <= 0:
+            raise ValueError("chunk_size must be positive")
+        if chunk_overlap < 0:
+            raise ValueError("chunk_overlap cannot be negative")
+        if chunk_overlap >= chunk_size:
+            raise ValueError("chunk_overlap must be less than chunk_size")
+        
         # Initialize text splitter and embeddings
         self.text_splitter = RecursiveCharacterTextSplitter(
             chunk_size=chunk_size,
@@ -26,16 +35,11 @@ class RagLogic:
             model_name=model_name, 
             model_kwargs={"device": "cpu"}, 
             encode_kwargs={"normalize_embeddings": True})
+        
+        # Logging initialization details
         logger.info(f"✓ RagLogic initialized with model: {model_name}")
         logger.info(f"  Chunk size: {chunk_size}, Overlap: {chunk_overlap}")
 
-        # Validate inputs
-        if chunk_size <= 0:
-            raise ValueError("chunk_size must be positive")
-        if chunk_overlap < 0:
-            raise ValueError("chunk_overlap cannot be negative")
-        if chunk_overlap >= chunk_size:
-            raise ValueError("chunk_overlap must be less than chunk_size")
     
     # step 1: load documents using document loader
     # step 2: split documents into fixed size chunks
@@ -48,16 +52,18 @@ class RagLogic:
 
         # Split documents
         chunks = self.text_splitter.split_documents(documents)
+        
+        # assing chunk id per document
+        chunk_id = {}
+        for chunk in chunks:
+            source = chunk.metadata.geet('filename', 'unknown')
 
-        chunk_counter = {}
-        for chunk in chunks: # assign chunk ids based on source
-            source = chunk.metadata.get("source","unknown") # get source from metadata, else use 'unknown'
+            if not source in chunk_id:
+                chunk_id[source] = 0
+            chunk.metadata['chunk_id'] = chunk_id[source]
+            chunk_id[source] += 1
 
-            if source not in chunk_counter: # initialize counter for new source and assign chunk ids
-                chunk_counter[source] = 0
-            chunk.metadata["chunk_id"] = chunk_counter[source] 
-            chunk_counter[source] += 1
-        logger.info(f"✓ Split {len(documents)} document(s) into {len(chunks)} chunk(s)")
+        logger.info(f"✓ Split into {len(chunks)} chunks from {len(documents)} document(s)")
         return chunks
     
     # load and split documents
@@ -82,8 +88,18 @@ class RagLogic:
         return self.split_documents(documents)
     
     # batch process files from directory
-    def process_directory(self, directory_path: str, glob_pattern: str = "**/*", mode: str = "single") -> List[Document]:
+    def process_directory(self, directory_path: str, glob_pattern: str = "**/*.{pdf,docx,doc,txt}", mode: str = "single") -> List[Document]:
 
+        # validate directory path
+        if not os.path.exists(directory_path):
+            logger.error(f"Directory does not exit: {directory_path}")
+            return []
+        
+        if not os.path.isdir(directory_path):
+            logger.error(f"Provided path is not a directory: {directory_path}")
+            return []
+        
+        # load documents from directory
         documents = load_from_directory(
             directory_path, 
             glob_pattern=glob_pattern,

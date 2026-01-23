@@ -67,26 +67,19 @@ class RagLogic:
         return chunks
     
     # load and split documents
-    def process_file(self, file_path: str) -> List[Document]:
-        """Process a single file into chunks."""
-        documents = document_loader(file_path)
+    def process_files(self, file_paths: str | List[str], mode: str = "single") -> List[Document]:
+        if isinstance(file_paths, str):
+            file_path = [file_paths]
         
+        documents = multiple_documents_loader(file_path, mode=mode)
         if not documents:
-            logger.warning(f"No documents loaded from {file_path}")
+            logger.warning("No documents loaded from provided file paths.")
             return []
-        
-        return self.split_documents(documents)
-
-    def process_files(self, file_paths: List[str]) -> List[Document]:
-        """Process multiple files into chunks."""
-        documents = multiple_documents_loader(file_paths)
-        
-        if not documents:
-            logger.warning("No documents loaded from provided files")
-            return []
-        
         return self.split_documents(documents)
     
+    def process_file(self, file_path: str):
+        return self.process_files([file_path])
+        
     # batch process files from directory
     def process_directory(self, directory_path: str, glob_pattern: str = "**/*.{pdf,docx,doc,txt}", mode: str = "single") -> List[Document]:
 

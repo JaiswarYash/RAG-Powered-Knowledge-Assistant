@@ -10,13 +10,13 @@ def get_config(key: str, default: str = None) -> str:
     return os.getenv(key, default)
 
 # API Keys
-HUGGINGFACE_API_KEY = get_config("HUGGING_FACE_API_KEY", "")
-GOOGLE_API_KEY = get_config("GOOGLE_API_KEY", "")
+HUGGINGFACE_API_KEY = get_config("HUGGING_FACE_API_KEY")
+GOOGLE_API_KEY = get_config('GOOGLE_API_KEY')
 
 # Model Configuration
 EMBEDDING_MODEL = get_config("EMBEDDING_MODEL", "sentence-transformers/all-MiniLM-L6-v2")
 LLM_PROVIDER = get_config("LLM_PROVIDER", "google")
-LLM_MODEL = get_config("LLM_MODEL", "gemini-pro")
+LLM_MODEL = get_config("LLM_MODEL", "gemini-1.5-flash")
 
 # Paths
 PERSIST_DIRECTORY = get_config("PERSIST_DIRECTORY", "./chroma_db")

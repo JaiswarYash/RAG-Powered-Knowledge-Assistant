@@ -81,6 +81,8 @@ def load_from_directory(directory_path: str, glob_pattern: str = "**/*.{pdf,docx
     except Exception as e:
         logger.error(f"Error loading documents from directory {directory_path}: {e}")
         return []
+    
+
 '''
 if __name__ == "__main__":
     sample_file = "data/sample.pdf"  # Replace with your sample file path

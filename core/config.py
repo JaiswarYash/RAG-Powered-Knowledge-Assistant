@@ -1,6 +1,4 @@
 import os
-from pathlib import Path
-from typing import Optional
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -11,12 +9,13 @@ def get_config(key: str, default: str = None) -> str:
 
 # API Keys
 HUGGINGFACE_API_KEY = get_config("HUGGING_FACE_API_KEY")
-GOOGLE_API_KEY = get_config('GOOGLE_API_KEY')
+Groq_API_KEY = get_config('Groq_API_KEY')
 
 # Model Configuration
 EMBEDDING_MODEL = get_config("EMBEDDING_MODEL", "sentence-transformers/all-MiniLM-L6-v2")
-LLM_PROVIDER = get_config("LLM_PROVIDER", "google")
-LLM_MODEL = get_config("LLM_MODEL", "gemini-1.5-flash")
+LLM_PROVIDER = get_config("LLM_PROVIDER", "groq")
+LLM_MODEL = get_config("LLM_MODEL", "llama-3.1-8b-instant")
+LLM_TEMPERATURE = 0.0
 
 # Paths
 PERSIST_DIRECTORY = get_config("PERSIST_DIRECTORY", "./chroma_db")
@@ -26,8 +25,8 @@ def validate_config():
     """Validate required configuration based on provider."""
     errors = []
     
-    if LLM_PROVIDER == "google" and not GOOGLE_API_KEY:
-        errors.append("GOOGLE_API_KEY required for Google provider")
+    if LLM_PROVIDER == "google" and not Groq_API_KEY:
+        errors.append("Groq_API_KEY required for Google provider")
     elif LLM_PROVIDER == "huggingface" and not HUGGINGFACE_API_KEY:
         errors.append("HUGGINGFACE_API_KEY required for HuggingFace Embeddings provider")
     

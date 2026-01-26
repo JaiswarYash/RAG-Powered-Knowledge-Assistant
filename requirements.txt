@@ -57,11 +57,11 @@ jsonpointer==3.0.0
 jsonschema==4.26.0
 jsonschema-specifications==2025.9.1
 kubernetes==34.1.0
-langchain==0.3.13
-langchain-community==0.3.13
-langchain-core==0.3.63
-langchain-google-genai==2.0.8
-langchain-text-splitters==0.3.8
+langchain==0.3.13 
+langchain-core==0.3.28 
+langchain-community==0.3.13 
+langchain-text-splitters==0.3.4 
+langchain-groq
 langsmith==0.2.11
 markdown-it-py==4.0.0
 MarkupSafe==3.0.3

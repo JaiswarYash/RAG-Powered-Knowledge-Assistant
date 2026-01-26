@@ -1,9 +1,10 @@
 import os
 import json
 import logging
-from Rag_logic import RagLogic
-from config import PERSIST_DIRECTORY
+from .rag_logic import RagLogic
+from .config import PERSIST_DIRECTORY
 from langchain_community.vectorstores import Chroma
+from langchain_community.vectorstores.utils import filter_complex_metadata
 from langchain_core.documents import Document
 from typing import List, Optional, Dict
 
@@ -20,8 +21,8 @@ logger = logging.getLogger(__name__)
 class VectorDB:
 
     # Initialize VectorDB with RagLogic instance
-    def __init__(self, RagLogic, persist_directory: str = PERSIST_DIRECTORY):
-        self.rag_logic = RagLogic
+    def __init__(self, rag_logic: RagLogic, persist_directory: str = PERSIST_DIRECTORY):
+        self.rag_logic = rag_logic
         self.persist_directory = persist_directory
         self.vector_store = None
         self.indexed_files_path = os.path.join(persist_directory, "indexed_files.json")
@@ -47,7 +48,7 @@ class VectorDB:
                 logger.error(f"Could not load indexed files: {e}")
         return set()
 
-    def _save_indexed_file(self)-> None:
+    def _save_indexed_files(self)-> None:
         '''Save list of indexed_file from disk'''
         try:
             with open(self.indexed_files_path, "w") as f:
@@ -60,7 +61,7 @@ class VectorDB:
     def load_vector_store(self) -> Chroma:
         """Load or create the Chroma vector store."""
         self.vector_store = Chroma(
-            persist_directory=self.persist_directory,
+            collection_name="example_collection",
             embedding_function=self.rag_logic.get_embedding_model()
         )
         logger.info("✓ Vector store ready")
@@ -68,28 +69,51 @@ class VectorDB:
     
     # Add document chunks to vector store
     def add_documents(self, chunks: List[Document]) -> bool:
-        """Add document chunks to vector store."""
+        """Add document chunks to vector store in batches."""
         if not chunks:
-            logger.warning('NO chunnks to add')
+            logger.warning("No chunks to add")
             return False
+    
         try:
-            # add it to store
-            self.vector_store.add_documents(chunks)
-
+            # Filter complex metadata (coordinates, layouts, etc.)
+            logger.info("Filtering complex metadata...")
+            chunks = filter_complex_metadata(chunks)
+            
+            # Chroma batch size limit
+            BATCH_SIZE = 5000
+            
+            # Add in batches
+            total_chunks = len(chunks)
+            num_batches = (total_chunks + BATCH_SIZE - 1) // BATCH_SIZE
+            
+            logger.info(f"Adding {total_chunks} chunks in {num_batches} batch(es)...")
+            
+            for i in range(0, total_chunks, BATCH_SIZE):
+                batch = chunks[i:i + BATCH_SIZE]
+                batch_num = i // BATCH_SIZE + 1
+                
+                logger.info(f"  Processing batch {batch_num}/{num_batches} ({len(batch)} chunks)")
+                
+                # Add batch to vector store
+                self.vector_store.add_documents(batch)
+            
+            # Track indexed files
             for chunk in chunks:
-                file_source = chunk.metadata.get('source')
+                file_source = chunk.metadata.get("source")
                 if file_source:
-                    abs_source = os.path.abspath(file_source)
-                    self.indexed_files(abs_source)
-            self._save_indexed_file()
-
-            logger.info(f"✓ Added {len(chunks)} chunks")
+                    self.indexed_files.add(file_source)
+            
+            # Save indexed files list
+            self._save_indexed_files()
+            
+            logger.info(f"✓ Successfully added {total_chunks} chunks")
             logger.info(f"  Total indexed files: {len(self.indexed_files)}")
             return True
+        
         except Exception as e:
             logger.error(f"✗ Error adding documents: {e}")
             return False
-
+        
     # Perform semantic search
     def search(self, query: str, top_k: int = 3,filter: Optional[Dict] = None) -> List[Document]:
         """Perform semantic search on the vector store."""
@@ -178,42 +202,3 @@ class VectorDB:
 
         chunks = self.rag_logic.split_documents(new_documents)
         self.add_documents(chunks)
-
-# Example usage
-if __name__ == "__main__":
-    logging.basicConfig(
-        level=logging.INFO,
-        format='%(asctime)s - %(levelname)s - %(message)s'
-    )
-    
-
-    from Rag_logic import RagLogic  # ← Import here, not at top
-    
-    # Initialize
-    rag_logic = RagLogic()
-    vector_db = VectorDB(rag_logic)
-    
-    # Show initial stats
-    logger.info("\nInitial state:")
-    logger.info(f"  {vector_db.get_stats()}")
-    
-    # Add a test file (change path)
-    test_file = "data/sample.pdf"
-    if os.path.exists(test_file):
-        logger.info(f"\nAdding file: {test_file}")
-        vector_db.process_and_add_file(test_file)
-        
-        # Show updated stats
-        logger.info("\nUpdated state:")
-        logger.info(f"  {vector_db.get_stats()}")
-        
-        # Test search
-        logger.info("\nTesting search:")
-        results = vector_db.search("what is AI", top_k=2)
-        
-        for i, doc in enumerate(results, 1):
-            logger.info(f"\n--- Result {i} ---")
-            logger.info(f"File: {doc.metadata.get('filename')}")
-            logger.info(f"Content: {doc.page_content[:150]}...")
-    else:
-        logger.error(f"File not found: {test_file}")

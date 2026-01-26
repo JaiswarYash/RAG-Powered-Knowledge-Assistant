@@ -1,11 +1,11 @@
-prompt_template="""
-Use the following pieces of information to answer the user's question.
-If you don't know the answer, just say that you don't know, don't try to make up an answer.
-if The data does not exist in the database then just say data is not present on the database,don't try to make up an answer.
+template = """You are a helpful assistant. Answer the question based only on the following context.
+If you cannot answer based on the context, say "I don't have enough information to answer that question."
+Be concise and specific in your answers.
 
-Context: {context}
-Question: {question}
+Context:
+{context}
 
-Only return the helpful answer below and nothing else.
-Helpful answer:
-"""
+Question: 
+{input}
+
+Answer:"""

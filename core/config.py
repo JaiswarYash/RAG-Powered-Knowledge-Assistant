@@ -15,7 +15,7 @@ Groq_API_KEY = get_config('Groq_API_KEY')
 EMBEDDING_MODEL = get_config("EMBEDDING_MODEL", "sentence-transformers/all-MiniLM-L6-v2")
 LLM_PROVIDER = get_config("LLM_PROVIDER", "groq")
 LLM_MODEL = get_config("LLM_MODEL", "llama-3.1-8b-instant")
-LLM_TEMPERATURE = 0.0
+LLM_TEMPERATURE = 0.7
 
 # Paths
 PERSIST_DIRECTORY = get_config("PERSIST_DIRECTORY", "./chroma_db")

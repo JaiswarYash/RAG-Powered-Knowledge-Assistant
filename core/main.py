@@ -65,7 +65,7 @@ class RagSystem:
         # Create retriever
         try:
             self.retriever = self.vector_db.vector_store.as_retriever(
-                search_kwargs={"k": 4}
+                search_kwargs={"k": 3}
             )
             logger.info("✓ Retriever created")
         except Exception as e:
@@ -159,17 +159,25 @@ class RagSystem:
             logger.error(f"✗ Error answering question: {e}")
             return {"answer": f"Error: {str(e)}", "context": []}
     
-    def ask_with_sources(self, question: str, top_k: int = 4) -> Dict:
-
+    def ask_with_sources(self, question: str, top_k: int = 3) -> Dict:
         result = self.ask_question(question, top_k)
 
         sources = []
         for doc in result.get("context", []):
+            # Try multiple possible keys for page number
+            page_num = (
+                doc.metadata.get("page") or 
+                doc.metadata.get("page_number") or 
+                doc.metadata.get("page_label") or
+                "N/A"
+            )
+            
             source_info = {
-                "filename": doc.metadata.get("filename", "Unknown"),
-                "page": doc.metadata.get("page", "N/A"),
+                "filename": doc.metadata.get("filename") or doc.metadata.get("source", "Unknown"),
+                "page": page_num,
                 "chunk_id": doc.metadata.get("chunk_id", "N/A"),
-                "content": doc.page_content[:1000] + "..." if len(doc.page_content) > 1000 else doc.page_content
+                "content": doc.page_content[:1000] + "..." if len(doc.page_content) > 1000 else doc.page_content,
+                "all_metadata": doc.metadata  # Temporary: to see all metadata
             }
             sources.append(source_info)
         

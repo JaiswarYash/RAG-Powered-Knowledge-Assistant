@@ -60,12 +60,23 @@ class VectorDB:
     # Create or load Chroma vector store
     def load_vector_store(self) -> Chroma:
         """Load or create the Chroma vector store."""
-        self.vector_store = Chroma(
-            collection_name="example_collection",
-            embedding_function=self.rag_logic.get_embedding_model()
-        )
-        logger.info("✓ Vector store ready")
-        return self.vector_store
+        try:
+            self.vector_store = Chroma(
+                collection_name="example_collection",
+                embedding_function=self.rag_logic.get_embedding_model(),
+                persist_directory=self.persist_directory
+            )
+            # Check if it loaded successfully
+            try:
+                count = self.vector_store._collection.count()
+                logger.info(f"✓ Vector store ready with {count} existing chunks")
+            except:
+                logger.info("✓ Vector store ready (new database)")
+                
+            return self.vector_store
+        
+        except Exception as e:
+            logger.error(f"✗ Error loading vector store: {e}")
     
     # Add document chunks to vector store
     def add_documents(self, chunks: List[Document]) -> bool:
@@ -142,9 +153,9 @@ class VectorDB:
         total_chunks = 0
         try:
             if self.vector_store and self.vector_store._collection:
-                total_chunks = self.vector_store._collection.count
+                total_chunks = self.vector_store._collection.count()  # ADD () here
         except Exception as e:
-            logger.error('Could not get chunk count: {e}')
+            logger.error(f'Could not get chunk count: {e}')  # Fix the f-string
         return {
             "total_files": len(self.indexed_files),
             "total_chunks": total_chunks,

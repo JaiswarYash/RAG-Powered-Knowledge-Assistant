@@ -63,6 +63,14 @@ class RagLogic:
             chunk.metadata['chunk_id'] = chunk_id[source]
             chunk_id[source] += 1
 
+            if 'page' not in chunk.metadata:
+                chunk.metadata['page'] = (
+                    chunk.metadata.get('page_number') or 
+                chunk.metadata.get('page_label') or
+                chunk.metadata.get('source_page') or
+                "N/A"
+                )
+
         logger.info(f"✓ Split into {len(chunks)} chunks from {len(documents)} document(s)")
         return chunks
     

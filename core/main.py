@@ -1,4 +1,5 @@
 import os
+import streamlit as st
 from .rag_logic import RagLogic
 from .vector_db import VectorDB
 from typing import List, Dict
@@ -14,6 +15,8 @@ from .config import (
     PERSIST_DIRECTORY
 )
 import logging
+from config import validate_config
+
 logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
@@ -22,6 +25,11 @@ logger = logging.getLogger(__name__)
 
 class RagSystem:
     def __init__(self):
+        try:
+            validate_config()
+        except ValueError as e:
+            st.error(str(e))
+        
         # Initialize RagLogic and VectorDB
 
         # Validate API key first

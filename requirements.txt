@@ -29,7 +29,7 @@ groq
 # -------------------------
 # Document Parsing (PDF / DOC / DOCX)
 # -------------------------
-unstructured
+langchain-unstructured
 unstructured[pdf]
 unstructured[docx]
 

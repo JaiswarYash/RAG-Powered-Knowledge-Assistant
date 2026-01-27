@@ -11,7 +11,7 @@ def get_config(key: str, default: str = None) -> str:
 # API Keys
 HUGGINGFACE_API_KEY = get_config("HUGGING_FACE_API_KEY")
 def get_groq_api_key():
-    return st.secrets.get("GROQ_API_KEY")
+    return st.secrets.get("Groq_API_KEY")
 
 
 # Model Configuration

@@ -1,4 +1,5 @@
 import os
+import streamlit as st
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -9,7 +10,9 @@ def get_config(key: str, default: str = None) -> str:
 
 # API Keys
 HUGGINGFACE_API_KEY = get_config("HUGGING_FACE_API_KEY")
-Groq_API_KEY = get_config('Groq_API_KEY')
+def get_groq_api_key():
+    return st.secrets.get("GROQ_API_KEY")
+
 
 # Model Configuration
 EMBEDDING_MODEL = get_config("EMBEDDING_MODEL", "sentence-transformers/all-MiniLM-L6-v2")
@@ -25,7 +28,7 @@ def validate_config():
     """Validate required configuration based on provider."""
     errors = []
     
-    if LLM_PROVIDER == "google" and not Groq_API_KEY:
+    if LLM_PROVIDER == "google" and not get_groq_api_key():
         errors.append("Groq_API_KEY required for Google provider")
     elif LLM_PROVIDER == "huggingface" and not HUGGINGFACE_API_KEY:
         errors.append("HUGGINGFACE_API_KEY required for HuggingFace Embeddings provider")

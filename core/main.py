@@ -7,8 +7,8 @@ from langchain_core.prompts import ChatPromptTemplate
 from langchain_groq import ChatGroq
 from langchain_core.runnables import RunnablePassthrough
 from langchain_core.output_parsers import StrOutputParser
+from .config import get_groq_api_key
 from .config import (
-    Groq_API_KEY, 
     LLM_MODEL, 
     LLM_TEMPERATURE,
     PERSIST_DIRECTORY
@@ -25,6 +25,7 @@ class RagSystem:
         # Initialize RagLogic and VectorDB
 
         # Validate API key first
+        Groq_API_KEY = get_groq_api_key()
         if not Groq_API_KEY:
             raise ValueError("Groq_API_KEY is required")
         

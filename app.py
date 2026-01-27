@@ -3,6 +3,15 @@ import os
 from core.main import RagSystem
 from pathlib import Path
 
+from groq import Groq
+
+api_key = st.secrets.get("GROQ_API_KEY") or os.getenv("GROQ_API_KEY")
+
+if not api_key:
+    st.error("Groq API key not found")
+    st.stop()
+
+client = Groq(api_key=api_key)
 # Page configuration
 st.set_page_config(
     page_title="RAG Knowledge Assistant",

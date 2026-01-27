@@ -24,12 +24,7 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 class RagSystem:
-    def __init__(self):
-        try:
-            validate_config()
-        except ValueError as e:
-            st.error(str(e))
-        
+    def __init__(self):    
         # Initialize RagLogic and VectorDB
 
         # Validate API key first

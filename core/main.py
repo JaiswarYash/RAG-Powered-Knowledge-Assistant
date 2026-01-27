@@ -15,7 +15,6 @@ from .config import (
     PERSIST_DIRECTORY
 )
 import logging
-from config import validate_config
 
 logging.basicConfig(
     level=logging.INFO,

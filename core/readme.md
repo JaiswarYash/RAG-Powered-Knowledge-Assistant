@@ -1,3 +1,4 @@
+document loader logic:
 ┌─────────────────────────────────────────────┐
 │  User calls: document_loader("report.pdf")  │
 └──────────────────┬──────────────────────────┘
@@ -37,4 +38,3 @@
    ┌────────────────┐
    │ Return docs!   │
    └────────────────┘
-   document_loader.py

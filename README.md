@@ -30,11 +30,11 @@ Try it out: **[[Live Application Demo:](https://jaiswaryash-rag-powered-knowledg
 ## 📸 Screenshots
 
 ### Main Interface
-![Main Interface](docs/images/user_interface.png)
+![Main Interface](docs/user_interface.png)
 
 ### Q&A with Sources
-![Q&A Example](docs/images/QnA_image.png)
-![Q&A Example](docs/images/sourcce_image.png)
+![Q&A Example1](docs/QnA_image.png)
+![Q&A Example2](docs/sourcce_image.png)
 
 ## 🛠️ Tech Stack
 
@@ -44,6 +44,63 @@ Try it out: **[[Live Application Demo:](https://jaiswaryash-rag-powered-knowledg
 - **Vector DB**: [ChromaDB](https://www.trychroma.com/)
 - **Document Processing**: [Unstructured](https://unstructured.io/)
 - **Framework**: [LangChain](https://www.langchain.com/)
+
+---
+
+## 🏗️ Architecture
+````
+┌─────────────────────────────────────────────────────────────┐
+│                         USER                                 │
+│                    (Streamlit Interface)                     │
+└────────────────────────┬────────────────────────────────────┘
+                         │
+                         ▼
+┌─────────────────────────────────────────────────────────────┐
+│                      app.py                                 │
+│              (User Interface Layer)                         │
+│  • File Upload                                              │
+│  • Chat Interface                                           │
+│  • Display Results                                          │
+└────────────────────────┬────────────────────────────────────┘
+                         │
+                         ▼
+┌─────────────────────────────────────────────────────────────┐
+│                   RAG System (main.py)                      │
+│              (Orchestration Layer)                          │
+│  • Coordinate components                                    │
+│  • Handle user requests                                     │
+└───────┬─────────────────────────────────┬───────────────────┘
+        │                                 │
+        ▼                                 ▼
+┌──────────────────┐            ┌─────────────────────┐
+│   RagLogic       │            │    VectorDB         │
+│ (rag_logic.py)   │            │  (vector_db.py)     │
+├──────────────────┤            ├─────────────────────┤
+│ • Load docs      │◄──────────►│ • Store vectors     │
+│ • Split chunks   │            │ • Search similar    │
+│ • Create vectors │            │ • Persist data      │
+└──────────────────┘            └─────────────────────┘
+        │                                 │
+        ▼                                 ▼
+┌──────────────────┐            ┌─────────────────────┐
+│ Document Loader  │            │     ChromaDB        │
+│(document_loader) │            │  (Vector Store)     │
+├──────────────────┤            ├─────────────────────┤
+│ • PDF            │            │ • Embeddings        │
+│ • DOCX           │            │ • Metadata          │
+│ • TXT            │            │ • Persistence       │
+└──────────────────┘            └─────────────────────┘
+        │                                 │
+        └─────────────┬───────────────────┘
+                      ▼
+        ┌──────────────────────────────┐
+        │      External Services       │
+        ├──────────────────────────────┤
+        │  • Groq LLM (Answer Gen)     │
+        │  • Sentence Transformers     │
+        │    (Embeddings)              │
+        └──────────────────────────────┘
+````
 
 ---
 
@@ -269,14 +326,6 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 **Project Link**: [rag-knowledge-assistant]( https://github.com/JaiswarYash/RAG-Powered-Knowledge-Assistant.git)
 
 **Live Demo**: [STREAMLIT_URL](https://jaiswaryash-rag-powered-knowledge-assistant-app-dwnd1z.streamlit.app/)
-
----
-
-## ⭐ Star History
-
-If you find this project helpful, please give it a star!
-
-[![Star History Chart](https://api.star-history.com/svg?repos=YOUR_USERNAME/rag-knowledge-assistant&type=Date)](https://star-history.com/#YOUR_USERNAME/rag-knowledge-assistant&Date)
 
 ---
 
